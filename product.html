@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>產品列表</title>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css' integrity='sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA==' crossorigin='anonymous'/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js' integrity='sha512-QTnb9BQkG4fBYIt9JGvYmxPpd6TBeKp6lsUrtiVQsrJ9sb33Bn9s0wMQO9qVBFbPX3xHRAsBHvXlcsrnJjExjg==' crossorigin='anonymous'></script>
+    <style>
+      body {
+        font-family: 'Noto Sans TC', sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="container pt-5">
+        <div class="row">
+          <div class="col-lg-6">
+            <h1>產品列表</h1>
+            <table class="table table-hover">
+              <thead>
+                <tr class="table-danger">
+                  <th>產品名稱</th>
+                  <th>原價</th>
+                  <th>售價</th>
+                  <th class="text-center">是否啟用</th>
+                  <th class="text-center">查看細節</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="product in products" :key="product.id" class="align-middle">
+                  <td>{{ product.title }}</td>
+                  <td>{{ product.origin_price }}</td>
+                  <td>{{ product.price }}</td>
+                  <td class="text-center"><input type="checkbox" :checked="product.is_enabled" @click="product.is_enabled = !product.is_enabled" style="accent-color: #dc3545"></td>
+                  <td class="text-center"><button type="button" class="btn btn-danger btn-sm" @click="select = product">查看細節</button></td>
+                </tr>
+              <tfoot>
+                <tr>
+                  <td colspan="5" class="border-0">目前有 <span class="text-danger fw-bold">{{ length }}</span> 項產品</td>
+                </tr>
+              </tfoot>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-lg-6">
+            <div class="d-flex justify-content-between align-items-center">
+              <h2>單一產品細節</h2>
+              <button type="button" class="btn btn-sm btn-warning" @click=" select=null">清除</button>
+            </div>
+            <div v-if="select" class="border border border-danger p-3">
+              <p>產品名稱: <span class="text-danger fw-bold">{{ select.title }}</span></h>
+              <p>原價: <span class="text-danger fw-bold">NT${{ select.origin_price }}</span></p>
+              <p>售價: <span class="text-danger fw-bold">NT${{ select.price }}</span></p>
+              <p>是否啟用: <span class="text-danger fw-bold">{{select.is_enabled ? "是": "否"}}</span></p>
+              <p>詳細資訊: <span class="text-danger fw-bold">{{ select.description }}</span></p>
+              <img :src="select.imageUrl" :alt="select.title" class="mw-100">
+            </div>
+            <p v-else class="text-secondary">請選擇一個商品查看</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    const { createApp } = Vue;
+    const baseUrl = 'https://vue3-course-api.hexschool.io';
+    const api_path = 'week2-product'
+    const app = {
+      data() {
+        const select = null;
+        const products = [];
+        return {
+          select,
+          products
+        };
+      },
+      methods: {
+      },
+      computed: {
+        length() {
+          console.log(this.products,this.products.length)
+          return this.products.length
+        }
+      },
+      mounted() {
+        const token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        if(token) {
+          axios.defaults.headers.common['Authorization'] = token;
+        } else {
+          window.location.href = "./index.html";
+        }
+        axios.get(`${baseUrl}/v2/api/${api_path}/admin/products/all`)
+          .then(res => {
+            this.products = Object.values(res.data.products);
+          })
+          .catch(err => console.error(err))
+      },
+    };
+
+    createApp(app).mount('#app');
+  </script>
+</html>
